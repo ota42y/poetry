@@ -27,6 +27,42 @@ def locker():
 def root():
     return ProjectPackage("root", "1.2.3")
 
+def test_saving_lock_file_with_local_package(locker, root):
+    package_absl = Package(
+        'absl-py',
+         '0.11.0',
+          source_type='git',
+           source_url='https://github.com/abseil/abseil-py.git', 
+           source_reference='c99edd8e3dffe3667a9f086db86aa259927ac429', 
+           source_resolved_reference='c99edd8e3dffe3667a9f086db86aa259927ac429'
+    )
+    package_absl.add_dependency(
+        Factory.create_dependency('six', '*', category="main")
+    )
+
+    package_local = Package(
+        "local_package",
+        "1.2.3",
+        source_type="directory",
+        source_url="./dummy",
+    )
+    package_local.add_dependency(Factory.create_dependency("absl-py", "rev c99edd8e3dffe3667a9f086db86aa259927ac429"))
+
+    package_six = Package(
+        "six",
+        "1.15.0",
+    )
+
+    packages = [package_absl, package_local, package_six]
+
+    locker.set_lock_data(root, packages)
+
+    with locker.lock.open(encoding="utf-8") as f:
+        content = f.read()
+
+    assert "" == content
+
+
 
 def test_lock_file_data_is_ordered(locker, root):
     package_a = get_package("A", "1.0.0")
